@@ -39,7 +39,8 @@ export interface Shelter {
   capacity: number;
   occupied: number;
   distanceKm: number;
-  status: "open" | "filling" | "full";
+  kind: "shelter" | "relief-camp";
+  status: "open" | "filling" | "full" | "closed";
   facilities: string[];
   contact: string;
   point: MapPoint;
@@ -205,10 +206,11 @@ export const demoReports: DisasterReport[] = [
 export const demoShelters: Shelter[] = [
   {
     id: "SHL-01",
-    name: "Sector 21 Municipal School",
-    locationName: "Central, near water tank",
-    capacity: 400,
-    occupied: 186,
+    name: "Sector 21 Municipal School Shelter",
+    kind: "shelter",
+    locationName: "Central Dehradun, near water tank",
+    capacity: 500,
+    occupied: 120,
     distanceKm: 1.2,
     status: "open",
     facilities: ["Medical desk", "Dry rations", "Women & child zone", "Power backup"],
@@ -218,9 +220,10 @@ export const demoShelters: Shelter[] = [
   {
     id: "SHL-02",
     name: "Riverside Community Hall",
-    locationName: "East Zone, Ward 4",
-    capacity: 250,
-    occupied: 231,
+    kind: "shelter",
+    locationName: "Dehradun East, Ward 4",
+    capacity: 300,
+    occupied: 240,
     distanceKm: 2.6,
     status: "filling",
     facilities: ["Drinking water", "Blankets", "Pet-friendly"],
@@ -230,9 +233,10 @@ export const demoShelters: Shelter[] = [
   {
     id: "SHL-03",
     name: "North Hills Relief Camp",
+    kind: "relief-camp",
     locationName: "North Hills, Bypass Junction",
-    capacity: 180,
-    occupied: 180,
+    capacity: 200,
+    occupied: 200,
     distanceKm: 5.4,
     status: "full",
     facilities: ["Tented housing", "Kitchen"],
@@ -242,6 +246,7 @@ export const demoShelters: Shelter[] = [
   {
     id: "SHL-04",
     name: "South Zone Stadium Shelter",
+    kind: "shelter",
     locationName: "South Zone, Gate 2",
     capacity: 900,
     occupied: 240,
@@ -250,6 +255,19 @@ export const demoShelters: Shelter[] = [
     facilities: ["Medical desk", "Sanitation block", "Accessible ramps", "Charging points"],
     contact: "+91 90000 11024",
     point: { x: 44, y: 80 },
+  },
+  {
+    id: "SHL-05",
+    name: "Old Bridge Transit Camp",
+    kind: "relief-camp",
+    locationName: "East Zone, riverside approach",
+    capacity: 150,
+    occupied: 0,
+    distanceKm: 2.1,
+    status: "closed",
+    facilities: ["Closed — inside flood zone"],
+    contact: "+91 90000 11025",
+    point: { x: 33, y: 47 },
   },
 ];
 
