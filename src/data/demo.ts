@@ -354,13 +354,15 @@ export const demoAlerts: EmergencyAlert[] = [
 ];
 
 export const demoStats = {
-  activeIncidents: 14,
-  peopleAffected: 4130,
-  sheltersOpen: 12,
+  activeDisasters: 7,
+  criticalReports: 12,
+  sheltersAvailable: 8,
+  peopleAssisted: 1248,
   responseTeams: 23,
   sosActive: 3,
   shelterCapacityUsed: 0.58,
 };
+
 
 export const demoIncidentTrend = [
   { hour: "00:00", reports: 4, sos: 0 },
