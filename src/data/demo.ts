@@ -95,15 +95,15 @@ export const DISASTER_LABEL: Record<DisasterType, string> = {
 
 export const demoReports: DisasterReport[] = [
   {
-    id: "RPT-4821",
+    id: "RPT-1042",
     type: "flood",
     title: "Riverbank breach flooding residential lanes",
     description:
       "Water rose above knee level in under an hour. Around 40 families are stranded on upper floors near the old bridge.",
-    locationName: "Kurla Riverside Colony",
-    district: "East Zone",
+    locationName: "Rispana Riverside Colony, Dehradun",
+    district: "Dehradun East",
     severity: "critical",
-    status: "dispatched",
+    status: "new",
     reportedAt: "2026-08-15T09:12:00Z",
     peopleAffected: 180,
     aiConfidence: 0.94,
@@ -113,6 +113,7 @@ export const demoReports: DisasterReport[] = [
       "Move to the second floor or higher, avoid all road travel, and wait for boat evacuation from the north lane.",
     point: { x: 32, y: 38 },
   },
+
   {
     id: "RPT-4818",
     type: "landslide",
