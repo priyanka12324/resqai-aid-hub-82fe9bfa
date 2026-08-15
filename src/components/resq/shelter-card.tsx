@@ -11,12 +11,14 @@ const statusTone: Record<Shelter["status"], string> = {
   open: "border-safe/40 bg-safe/12 text-safe",
   filling: "border-moderate/40 bg-moderate/12 text-moderate",
   full: "border-critical/40 bg-critical/12 text-critical",
+  closed: "border-border/70 bg-muted/40 text-muted-foreground",
 };
 
 const statusLabel: Record<Shelter["status"], string> = {
   open: "Open",
-  filling: "Filling up",
-  full: "At capacity",
+  filling: "Almost full",
+  full: "Full",
+  closed: "Closed",
 };
 
 export function ShelterCard({ shelter, onNavigate }: { shelter: Shelter; onNavigate?: () => void }) {
@@ -33,7 +35,9 @@ export function ShelterCard({ shelter, onNavigate }: { shelter: Shelter; onNavig
           <h3 className="truncate text-base font-semibold">{shelter.name}</h3>
           <p className="mt-0.5 inline-flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
             <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
-            <span className="truncate">{shelter.locationName}</span>
+            <span className="truncate">
+              {shelter.kind === "relief-camp" ? "Relief camp" : "Shelter"} · {shelter.locationName}
+            </span>
           </p>
         </div>
         <span
