@@ -40,8 +40,8 @@ const quickActions = [
  */
 function mockAssistant(question: string, location: string): string {
   const q = question.toLowerCase();
-  const shelter = [...demoShelters].sort((a, b) => a.distanceKm - b.distanceKm)[0];
-  const hospital = [...demoHospitals].sort((a, b) => a.distanceKm - b.distanceKm)[0];
+  const shelter = [...demoShelters].sort((a, b) => a.distanceKm - b.distanceKm)[0]!;
+  const hospital = [...demoHospitals].sort((a, b) => a.distanceKm - b.distanceKm)[0]!;
 
   if (/immediate danger|help me|dying|trapped|emergency/.test(q)) {
     return [
