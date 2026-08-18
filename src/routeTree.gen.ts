@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AiAssistantRouteImport } from './routes/ai-assistant'
 import { Route as EmergencyMapRouteImport } from './routes/emergency-map'
 import { Route as FindHelpRouteImport } from './routes/find-help'
@@ -19,6 +20,11 @@ import { Route as SosRouteImport } from './routes/sos'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AiAssistantRoute = AiAssistantRouteImport.update({
@@ -49,6 +55,7 @@ const SosRoute = SosRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/ai-assistant': typeof AiAssistantRoute
   '/emergency-map': typeof EmergencyMapRoute
   '/find-help': typeof FindHelpRoute
@@ -57,6 +64,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/ai-assistant': typeof AiAssistantRoute
   '/emergency-map': typeof EmergencyMapRoute
   '/find-help': typeof FindHelpRoute
@@ -66,6 +74,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/ai-assistant': typeof AiAssistantRoute
   '/emergency-map': typeof EmergencyMapRoute
   '/find-help': typeof FindHelpRoute
@@ -75,13 +84,26 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/ai-assistant' | '/emergency-map' | '/find-help' | '/report' | '/sos'
+    | '/'
+    | '/admin'
+    | '/ai-assistant'
+    | '/emergency-map'
+    | '/find-help'
+    | '/report'
+    | '/sos'
   fileRoutesByTo: FileRoutesByTo
   to:
-    '/' | '/ai-assistant' | '/emergency-map' | '/find-help' | '/report' | '/sos'
+    | '/'
+    | '/admin'
+    | '/ai-assistant'
+    | '/emergency-map'
+    | '/find-help'
+    | '/report'
+    | '/sos'
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/ai-assistant'
     | '/emergency-map'
     | '/find-help'
@@ -91,6 +113,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   AiAssistantRoute: typeof AiAssistantRoute
   EmergencyMapRoute: typeof EmergencyMapRoute
   FindHelpRoute: typeof FindHelpRoute
@@ -105,6 +128,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ai-assistant': {
@@ -147,6 +177,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   AiAssistantRoute: AiAssistantRoute,
   EmergencyMapRoute: EmergencyMapRoute,
   FindHelpRoute: FindHelpRoute,

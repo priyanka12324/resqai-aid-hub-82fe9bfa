@@ -141,35 +141,35 @@ function AdminPage() {
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <StatCard
           label="Active disasters"
-          value={stats.activeDisasters}
+          value={stats.activeDisasters.toLocaleString()}
           icon={AlertTriangle}
           tone="critical"
           hint="Unresolved incidents"
         />
         <StatCard
           label="Critical reports"
-          value={stats.criticalReports}
+          value={stats.criticalReports.toLocaleString()}
           icon={Siren}
           tone="critical"
           hint="Severity CRITICAL"
         />
         <StatCard
           label="People affected"
-          value={stats.peopleAffected}
+          value={stats.peopleAffected.toLocaleString()}
           icon={Users}
           tone="high"
           hint="Across all reports"
         />
         <StatCard
           label="Shelters open"
-          value={stats.sheltersAvailable}
+          value={stats.sheltersAvailable.toLocaleString()}
           icon={Building2}
           tone="safe"
           hint={`${shelterSeatsFree} places free`}
         />
         <StatCard
           label="Pending SOS"
-          value={stats.pendingSos}
+          value={stats.pendingSos.toLocaleString()}
           icon={Activity}
           tone="accent"
           hint="Awaiting acknowledgement"
@@ -203,7 +203,7 @@ function AdminPage() {
             <p className="mt-2 text-sm">
               {stats.criticalReports} critical incident
               {stats.criticalReports === 1 ? "" : "s"} dominate the picture, led by the riverside
-              levee breach in Dehradun East with {reports[queue[0] ? 0 : 0]?.peopleAffected ?? 0}+
+              levee breach in Dehradun East with {queue[0]?.report.peopleAffected ?? 0}+
               people affected in the top-priority zone. Approximately{" "}
               {stats.peopleAffected.toLocaleString()} people are impacted city-wide across{" "}
               {stats.activeDisasters} unresolved incidents.
