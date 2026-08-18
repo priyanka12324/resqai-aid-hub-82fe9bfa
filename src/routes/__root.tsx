@@ -121,6 +121,16 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+/** Subtle fade/rise on route change — keyed on pathname. */
+function PageTransition({ children }: { children: ReactNode }) {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  return (
+    <div key={pathname} className="animate-in fade-in slide-in-from-bottom-1 duration-300">
+      {children}
+    </div>
+  );
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
@@ -133,7 +143,9 @@ function RootComponent() {
             <AppHeader />
             <main className="min-w-0 flex-1">
               {/* Required: nested routes render here. */}
-              <Outlet />
+              <PageTransition>
+                <Outlet />
+              </PageTransition>
             </main>
           </div>
         </div>
