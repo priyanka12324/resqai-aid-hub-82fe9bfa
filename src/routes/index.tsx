@@ -25,10 +25,10 @@ import {
   demoBlockedRoads,
   demoHospitals,
   demoShelters,
-  demoStats,
   formatTimeAgo,
 } from "@/data/demo";
 import { useReports } from "@/lib/report-store";
+import { computeOpsStats } from "@/lib/ops-metrics";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -52,6 +52,7 @@ export const Route = createFileRoute("/")({
 
 function Dashboard() {
   const { reports } = useReports();
+  const stats = computeOpsStats(reports);
   const criticalReports = reports.filter(
     (report) => report.severity === "critical" || report.severity === "high",
   );
@@ -62,8 +63,10 @@ function Dashboard() {
 
   return (
     <div className="mx-auto w-full max-w-[110rem] space-y-5 p-3 sm:p-5">
+      <h1 className="sr-only">ResQAI disaster response dashboard</h1>
+
       <EmergencyAlertBanner
-        title="⚠ Active disaster — heavy rainfall and flooding reported"
+        title="Active disaster — heavy rainfall and flooding reported"
         message="Level 3 response active across Dehradun East and North Hills. Vertical evacuation advised in Riverside Colony wards 3-5."
         meta="Simulated district control room · updated 5m ago"
         actionLabel="Open emergency map"
@@ -73,31 +76,31 @@ function Dashboard() {
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Active disasters"
-          value={String(demoStats.activeDisasters)}
+          value={String(stats.activeDisasters)}
           icon={TriangleAlert}
           tone="critical"
-          delta={{ value: "+2 today", direction: "up" }}
+          hint="Unresolved incidents"
         />
         <StatCard
           label="Critical reports"
-          value={String(demoStats.criticalReports)}
+          value={String(stats.criticalReports)}
           icon={Radio}
           tone="high"
-          hint="4 awaiting response"
+          hint={`${stats.highPriorityReports} critical or high`}
         />
         <StatCard
           label="Available shelters"
-          value={String(demoStats.sheltersAvailable)}
+          value={String(stats.sheltersAvailable)}
           icon={Home}
           tone="safe"
-          hint="58% capacity used"
+          hint={`${stats.shelterSeatsFree} places free`}
         />
         <StatCard
-          label="People assisted"
-          value={demoStats.peopleAssisted.toLocaleString("en-IN")}
+          label="People affected"
+          value={stats.peopleAffected.toLocaleString("en-IN")}
           icon={Users}
           tone="accent"
-          delta={{ value: "+312 since 06:00", direction: "down" }}
+          hint="Across all reports"
         />
       </section>
 

@@ -176,7 +176,7 @@ export function EmergencyMap({
         </Badge>
       </div>
 
-      {showLegend && <MapLegend className="absolute bottom-3 left-3" />}
+      {showLegend && <MapLegend className="absolute bottom-3 left-3 hidden sm:block" />}
 
       {selection && (
         <MapPopup selection={selection} onClose={() => select(null)} />
