@@ -67,6 +67,14 @@ function toDisasterType(value: string): DisasterType {
   return value as DisasterType;
 }
 
+interface FieldErrors {
+  location?: string;
+  description?: string;
+  people?: string;
+  lat?: string;
+  lng?: string;
+}
+
 function ReportPage() {
   const [type, setType] = useState<string>("flood");
   const [locationName, setLocationName] = useState("Rispana Riverside Colony, Dehradun");
@@ -79,7 +87,7 @@ function ReportPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "analyzing" | "done">("idle");
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<FieldErrors>({});
 
   const useCurrentLocation = () => {
     setLat("30.3165");
@@ -107,7 +115,7 @@ function ReportPage() {
   };
 
   const validate = () => {
-    const next: Record<string, string> = {};
+    const next: FieldErrors = {};
     if (locationName.trim().length < 3) next.location = "Enter a location name (min 3 characters).";
     if (description.trim().length < 10) next.description = "Describe what is happening (min 10 characters).";
     const peopleNumber = Number(people);
