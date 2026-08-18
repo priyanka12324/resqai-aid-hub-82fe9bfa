@@ -10,11 +10,20 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AiAssistantRouteImport } from './routes/ai-assistant'
 import { Route as EmergencyMapRouteImport } from './routes/emergency-map'
+import { Route as FindHelpRouteImport } from './routes/find-help'
+import { Route as ReportRouteImport } from './routes/report'
+import { Route as SosRouteImport } from './routes/sos'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AiAssistantRoute = AiAssistantRouteImport.update({
+  id: '/ai-assistant',
+  path: '/ai-assistant',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmergencyMapRoute = EmergencyMapRouteImport.update({
@@ -22,31 +31,71 @@ const EmergencyMapRoute = EmergencyMapRouteImport.update({
   path: '/emergency-map',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FindHelpRoute = FindHelpRouteImport.update({
+  id: '/find-help',
+  path: '/find-help',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportRoute = ReportRouteImport.update({
+  id: '/report',
+  path: '/report',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SosRoute = SosRouteImport.update({
+  id: '/sos',
+  path: '/sos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ai-assistant': typeof AiAssistantRoute
   '/emergency-map': typeof EmergencyMapRoute
+  '/find-help': typeof FindHelpRoute
+  '/report': typeof ReportRoute
+  '/sos': typeof SosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ai-assistant': typeof AiAssistantRoute
   '/emergency-map': typeof EmergencyMapRoute
+  '/find-help': typeof FindHelpRoute
+  '/report': typeof ReportRoute
+  '/sos': typeof SosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/ai-assistant': typeof AiAssistantRoute
   '/emergency-map': typeof EmergencyMapRoute
+  '/find-help': typeof FindHelpRoute
+  '/report': typeof ReportRoute
+  '/sos': typeof SosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/emergency-map'
+  fullPaths:
+    '/' | '/ai-assistant' | '/emergency-map' | '/find-help' | '/report' | '/sos'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/emergency-map'
-  id: '__root__' | '/' | '/emergency-map'
+  to:
+    '/' | '/ai-assistant' | '/emergency-map' | '/find-help' | '/report' | '/sos'
+  id:
+    | '__root__'
+    | '/'
+    | '/ai-assistant'
+    | '/emergency-map'
+    | '/find-help'
+    | '/report'
+    | '/sos'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AiAssistantRoute: typeof AiAssistantRoute
   EmergencyMapRoute: typeof EmergencyMapRoute
+  FindHelpRoute: typeof FindHelpRoute
+  ReportRoute: typeof ReportRoute
+  SosRoute: typeof SosRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -58,6 +107,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ai-assistant': {
+      id: '/ai-assistant'
+      path: '/ai-assistant'
+      fullPath: '/ai-assistant'
+      preLoaderRoute: typeof AiAssistantRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/emergency-map': {
       id: '/emergency-map'
       path: '/emergency-map'
@@ -65,12 +121,37 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmergencyMapRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/find-help': {
+      id: '/find-help'
+      path: '/find-help'
+      fullPath: '/find-help'
+      preLoaderRoute: typeof FindHelpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/report': {
+      id: '/report'
+      path: '/report'
+      fullPath: '/report'
+      preLoaderRoute: typeof ReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sos': {
+      id: '/sos'
+      path: '/sos'
+      fullPath: '/sos'
+      preLoaderRoute: typeof SosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AiAssistantRoute: AiAssistantRoute,
   EmergencyMapRoute: EmergencyMapRoute,
+  FindHelpRoute: FindHelpRoute,
+  ReportRoute: ReportRoute,
+  SosRoute: SosRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
