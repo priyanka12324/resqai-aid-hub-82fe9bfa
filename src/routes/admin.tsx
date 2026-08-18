@@ -27,9 +27,14 @@ import {
   formatTimeAgo,
   type DisasterReport,
   type ReportStatus,
-  type Severity,
 } from "@/data/demo";
 import { useReports } from "@/lib/report-store";
+import {
+  computeOpsStats,
+  hospitalBedsFree,
+  priorityScore,
+  shelterSeatsFree,
+} from "@/lib/ops-metrics";
 import { useSosHistory } from "@/lib/sos-store";
 import { cn } from "@/lib/utils";
 
@@ -51,19 +56,6 @@ export const Route = createFileRoute("/admin")({
   }),
   component: AdminPage,
 });
-
-const severityWeight: Record<Severity, number> = { critical: 92, high: 74, moderate: 52, low: 28 };
-
-function priorityScore(report: DisasterReport) {
-  return Math.min(
-    100,
-    Math.round(
-      severityWeight[report.severity] +
-        report.aiConfidence * 5 +
-        Math.min(6, report.peopleAffected / 40),
-    ),
-  );
-}
 
 const statusTone: Record<ReportStatus, string> = {
   new: "border-critical/40 bg-critical/12 text-critical",
@@ -92,23 +84,14 @@ function AdminPage() {
   );
 
   const stats = useMemo(() => {
-    const active = reports.filter((report) => statusOf(report) !== "resolved");
+    const resolvedIds = Object.entries(overrides)
+      .filter(([, status]) => status === "resolved")
+      .map(([id]) => id);
     return {
-      activeDisasters: active.length,
-      criticalReports: reports.filter((report) => report.severity === "critical").length,
-      peopleAffected: reports.reduce((total, report) => total + report.peopleAffected, 0),
-      sheltersAvailable: demoShelters.filter((shelter) => shelter.status !== "closed").length,
+      ...computeOpsStats(reports, resolvedIds),
       pendingSos: sosHistory.filter((alert) => alert.status !== "Acknowledged (demo)").length,
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reports, overrides, sosHistory]);
-
-  const shelterSeatsFree = demoShelters.reduce(
-    (total, shelter) =>
-      shelter.status === "closed" ? total : total + (shelter.capacity - shelter.occupied),
-    0,
-  );
-  const bedsFree = demoHospitals.reduce((total, hospital) => total + hospital.bedsAvailable, 0);
 
   const advance = (report: DisasterReport) => {
     const current = statusOf(report);
@@ -210,7 +193,7 @@ function AdminPage() {
             </p>
             <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
               <li>
-                Capacity: {shelterSeatsFree} shelter places and {bedsFree} hospital beds currently
+                Capacity: {shelterSeatsFree} shelter places and {hospitalBedsFree} hospital beds currently
                 free.
               </li>
               <li>
