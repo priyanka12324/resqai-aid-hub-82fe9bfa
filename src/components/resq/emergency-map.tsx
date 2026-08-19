@@ -1,17 +1,18 @@
-import { useMemo, useState } from "react";
-import { Layers, Maximize2, Navigation, X } from "lucide-react";
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ClientOnly } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { Crosshair, Layers, Loader2, Maximize2, Navigation, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SeverityBadge } from "@/components/resq/severity-badge";
 import {
-  BlockedRoadMarker,
-  DisasterMarker,
-  HospitalMarker,
-  ShelterMarker,
-  UserLocationMarker,
-} from "@/components/resq/map-markers";
+  ALL_LEGEND_KEYS,
+  LEGEND_ITEMS,
+  type LegendKey,
+  type MapSelection,
+} from "@/components/resq/map-selection";
 import {
   DISASTER_LABEL,
   formatTimeAgo,
@@ -20,13 +21,19 @@ import {
   type Hospital,
   type Shelter,
 } from "@/data/demo";
+import {
+  CITY_CENTER,
+  formatDistance,
+  formatDuration,
+  pointToLatLng,
+  type LatLng,
+} from "@/lib/geo";
+import { computeRoute, type RouteResult } from "@/lib/directions.functions";
 import { cn } from "@/lib/utils";
 
-export type MapSelection =
-  | { kind: "disaster"; data: DisasterReport }
-  | { kind: "shelter"; data: Shelter }
-  | { kind: "hospital"; data: Hospital }
-  | { kind: "road"; data: BlockedRoad };
+export type { MapSelection } from "@/components/resq/map-selection";
+
+const GoogleMapCanvas = lazy(() => import("@/components/resq/google-map-canvas"));
 
 export interface MapLayers {
   disasters: boolean;
@@ -36,9 +43,9 @@ export interface MapLayers {
 }
 
 /**
- * DEMO MAP — a schematic, offline city canvas (no tile provider configured).
- * Marker positions are normalised 0-100 coordinates so this component can be
- * swapped for a real mapping library later without touching the callers.
+ * Live Google-Maps-backed emergency map. Marker clicks open a details popup,
+ * legend entries toggle what is displayed, the browser's geolocation can be
+ * tracked, and directions are fetched on demand from the Routes API.
  */
 export function EmergencyMap({
   reports,
@@ -46,7 +53,6 @@ export function EmergencyMap({
   hospitals,
   roads,
   layers = { disasters: true, shelters: true, hospitals: true, roads: true },
-  userLocation = { x: 44, y: 60 },
   className,
   onSelect,
   showLegend = true,
@@ -62,20 +68,108 @@ export function EmergencyMap({
   showLegend?: boolean;
 }) {
   const [selection, setSelection] = useState<MapSelection | null>(null);
+  const [hidden, setHidden] = useState<LegendKey[]>([]);
+  const [userLocation, setUserLocation] = useState<LatLng | null>(null);
+  const [tracking, setTracking] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [focus, setFocus] = useState<{ coord: LatLng; key: number } | null>(null);
+  const [route, setRoute] = useState<RouteResult | null>(null);
+  const [routeLabel, setRouteLabel] = useState<string | null>(null);
+  const [routing, setRouting] = useState(false);
+  const [routeError, setRouteError] = useState<string | null>(null);
+  const watchRef = useRef<number | null>(null);
+
+  const getRoute = useServerFn(computeRoute);
+
+  const isVisible = useCallback((key: LegendKey) => !hidden.includes(key), [hidden]);
+
+  const toggleLegend = (key: LegendKey) =>
+    setHidden((prev) => (prev.includes(key) ? prev.filter((item) => item !== key) : [...prev, key]));
+
+  const visibleReports = useMemo(
+    () => (layers.disasters ? reports.filter((report) => isVisible(report.severity)) : []),
+    [layers.disasters, reports, isVisible],
+  );
+  const visibleShelters = useMemo(
+    () => (layers.shelters && isVisible("shelters") ? shelters : []),
+    [layers.shelters, shelters, isVisible],
+  );
+  const visibleHospitals = useMemo(
+    () => (layers.hospitals && isVisible("hospitals") ? hospitals : []),
+    [layers.hospitals, hospitals, isVisible],
+  );
+  const visibleRoads = useMemo(
+    () => (layers.roads && isVisible("roads") ? roads : []),
+    [layers.roads, roads, isVisible],
+  );
 
   const select = (next: MapSelection | null) => {
     setSelection(next);
+    setRouteError(null);
     onSelect?.(next);
+    if (next) {
+      const coord =
+        next.kind === "road"
+          ? {
+              lat: (pointToLatLng(next.data.from).lat + pointToLatLng(next.data.to).lat) / 2,
+              lng: (pointToLatLng(next.data.from).lng + pointToLatLng(next.data.to).lng) / 2,
+            }
+          : pointToLatLng(next.data.point);
+      setFocus({ coord, key: Date.now() });
+    }
   };
 
-  const roadPaths = useMemo(
-    () =>
-      roads.map((road) => ({
-        road,
-        mid: { x: (road.from.x + road.to.x) / 2, y: (road.from.y + road.to.y) / 2 },
-      })),
-    [roads],
+  useEffect(
+    () => () => {
+      if (watchRef.current !== null) navigator.geolocation.clearWatch(watchRef.current);
+    },
+    [],
   );
+
+  const toggleTracking = () => {
+    if (tracking) {
+      if (watchRef.current !== null) navigator.geolocation.clearWatch(watchRef.current);
+      watchRef.current = null;
+      setTracking(false);
+      return;
+    }
+    if (!("geolocation" in navigator)) {
+      setLocationError("Location is not available in this browser.");
+      return;
+    }
+    setLocationError(null);
+    setTracking(true);
+    watchRef.current = navigator.geolocation.watchPosition(
+      (position) => {
+        const coord = { lat: position.coords.latitude, lng: position.coords.longitude };
+        setUserLocation(coord);
+        setFocus({ coord, key: Date.now() });
+      },
+      () => {
+        setLocationError("Location permission denied — using the city centre instead.");
+        setUserLocation(CITY_CENTER);
+        setTracking(false);
+      },
+      { enableHighAccuracy: true, maximumAge: 10_000, timeout: 15_000 },
+    );
+  };
+
+  const requestDirections = async (target: MapSelection) => {
+    const destination =
+      target.kind === "road" ? pointToLatLng(target.data.from) : pointToLatLng(target.data.point);
+    const origin = userLocation ?? CITY_CENTER;
+    setRouting(true);
+    setRouteError(null);
+    try {
+      const result = await getRoute({ data: { origin, destination, mode: "DRIVE" } });
+      setRoute(result);
+      setRouteLabel(target.kind === "disaster" ? target.data.locationName : target.data.name);
+    } catch (err) {
+      setRouteError(err instanceof Error ? err.message : "Could not calculate a route.");
+    } finally {
+      setRouting(false);
+    }
+  };
 
   return (
     <div
@@ -84,116 +178,108 @@ export function EmergencyMap({
         className,
       )}
     >
-      {/* schematic terrain */}
-      <div className="absolute inset-0 grid-backdrop opacity-70" />
-      <svg
-        className="absolute inset-0 h-full w-full"
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
-        aria-hidden
+      <ClientOnly
+        fallback={
+          <div className="grid h-full w-full place-items-center bg-surface text-sm text-muted-foreground">
+            Preparing map…
+          </div>
+        }
       >
-        <path
-          d="M-5 30 C 20 34, 30 46, 45 52 S 70 62, 105 58"
-          className="fill-none stroke-accent/25"
-          strokeWidth="4"
-        />
-        <path d="M10 -5 L 22 105" className="fill-none stroke-grid/70" strokeWidth="0.6" />
-        <path d="M45 -5 L 52 105" className="fill-none stroke-grid/70" strokeWidth="0.6" />
-        <path d="M78 -5 L 70 105" className="fill-none stroke-grid/70" strokeWidth="0.6" />
-        <path d="M-5 22 L 105 18" className="fill-none stroke-grid/70" strokeWidth="0.6" />
-        <path d="M-5 66 L 105 72" className="fill-none stroke-grid/70" strokeWidth="0.6" />
-        <polygon points="55,5 92,10 88,34 60,28" className="fill-safe/8 stroke-safe/20" strokeWidth="0.4" />
-        {layers.roads &&
-          roads.map((road) => (
-            <line
-              key={road.id}
-              x1={road.from.x}
-              y1={road.from.y}
-              x2={road.to.x}
-              y2={road.to.y}
-              className="stroke-moderate/80"
-              strokeWidth="1.2"
-              strokeDasharray="3 2"
-            />
-          ))}
-      </svg>
+        <Suspense
+          fallback={
+            <div className="grid h-full w-full place-items-center bg-surface text-sm text-muted-foreground">
+              Loading live map…
+            </div>
+          }
+        >
+          <GoogleMapCanvas
+            reports={visibleReports}
+            shelters={visibleShelters}
+            hospitals={visibleHospitals}
+            roads={visibleRoads}
+            selection={selection}
+            onSelect={select}
+            userLocation={userLocation}
+            routePolyline={route?.encodedPolyline ?? null}
+            focus={focus}
+          />
+        </Suspense>
+      </ClientOnly>
 
-      {/* markers */}
-      <div className="absolute inset-0">
-        {layers.disasters &&
-          reports.map((report) => (
-            <DisasterMarker
-              key={report.id}
-              x={report.point.x}
-              y={report.point.y}
-              type={report.type}
-              severity={report.severity}
-              label={`${DISASTER_LABEL[report.type]} — ${report.locationName}`}
-              active={selection?.kind === "disaster" && selection.data.id === report.id}
-              onClick={() => select({ kind: "disaster", data: report })}
-            />
-          ))}
-        {layers.shelters &&
-          shelters.map((shelter) => (
-            <ShelterMarker
-              key={shelter.id}
-              x={shelter.point.x}
-              y={shelter.point.y}
-              label={`Shelter — ${shelter.name}`}
-              active={selection?.kind === "shelter" && selection.data.id === shelter.id}
-              onClick={() => select({ kind: "shelter", data: shelter })}
-            />
-          ))}
-        {layers.hospitals &&
-          hospitals.map((hospital) => (
-            <HospitalMarker
-              key={hospital.id}
-              x={hospital.point.x}
-              y={hospital.point.y}
-              label={`Hospital — ${hospital.name}`}
-              active={selection?.kind === "hospital" && selection.data.id === hospital.id}
-              onClick={() => select({ kind: "hospital", data: hospital })}
-            />
-          ))}
-        {layers.roads &&
-          roadPaths.map(({ road, mid }) => (
-            <BlockedRoadMarker
-              key={road.id}
-              x={mid.x}
-              y={mid.y}
-              label={`Blocked road — ${road.name}`}
-              active={selection?.kind === "road" && selection.data.id === road.id}
-              onClick={() => select({ kind: "road", data: road })}
-            />
-          ))}
-        <UserLocationMarker x={userLocation.x} y={userLocation.y} />
-      </div>
-
-      {/* demo notice */}
-      <div className="absolute left-3 top-3 flex flex-wrap items-center gap-2">
-        <Badge className="border-border/70 bg-background/85 font-normal text-muted-foreground" variant="outline">
-          <Layers className="mr-1 h-3.5 w-3.5" /> Demo map · simulated data, not real-time
+      <div className="pointer-events-none absolute left-3 top-3 flex max-w-[calc(100%-1.5rem)] flex-wrap items-center gap-2">
+        <Badge
+          className="border-border/70 bg-background/85 font-normal text-muted-foreground"
+          variant="outline"
+        >
+          <Layers className="mr-1 h-3.5 w-3.5" /> Live map · simulated incident data
         </Badge>
+        <Button
+          size="sm"
+          variant={tracking ? "default" : "secondary"}
+          className="pointer-events-auto h-7 px-2.5 text-xs"
+          onClick={toggleTracking}
+        >
+          <Crosshair className="h-3.5 w-3.5" />
+          {tracking ? "Tracking location" : "Track my location"}
+        </Button>
       </div>
 
-      {showLegend && <MapLegend className="absolute bottom-3 left-3 hidden sm:block" />}
+      {(locationError ?? route) && (
+        <div className="absolute bottom-3 right-3 z-10 max-w-[16rem] rounded-lg border border-border/70 bg-background/90 p-3 text-xs backdrop-blur">
+          {locationError && <p className="text-muted-foreground">{locationError}</p>}
+          {route && (
+            <div className={cn(locationError && "mt-2")}>
+              <p className="ops-label">Route to {routeLabel}</p>
+              <p className="mt-1 font-medium">
+                {formatDistance(route.distanceMeters)} · {formatDuration(route.durationSeconds)}
+              </p>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="mt-1 h-7 px-2 text-xs"
+                onClick={() => {
+                  setRoute(null);
+                  setRouteLabel(null);
+                }}
+              >
+                Clear route
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {showLegend && (
+        <MapLegend
+          className="absolute bottom-3 left-3 hidden sm:block"
+          hidden={hidden}
+          onToggle={toggleLegend}
+        />
+      )}
 
       {selection && (
-        <MapPopup selection={selection} onClose={() => select(null)} />
+        <MapPopup
+          selection={selection}
+          onClose={() => select(null)}
+          onDirections={() => void requestDirections(selection)}
+          routing={routing}
+          error={routeError}
+        />
       )}
     </div>
   );
 }
 
-export function MapLegend({ className }: { className?: string }) {
-  const items = [
-    { color: "bg-critical", label: "Active disaster zone" },
-    { color: "bg-high", label: "High-risk area" },
-    { color: "bg-safe", label: "Shelter / relief camp" },
-    { color: "bg-accent", label: "Hospital" },
-    { color: "bg-moderate", label: "Blocked road" },
-    { color: "bg-primary", label: "Your location" },
-  ];
+export function MapLegend({
+  className,
+  hidden = [],
+  onToggle,
+}: {
+  className?: string;
+  hidden?: LegendKey[];
+  onToggle?: (key: LegendKey) => void;
+}) {
+  const interactive = Boolean(onToggle);
   return (
     <div
       className={cn(
@@ -201,15 +287,52 @@ export function MapLegend({ className }: { className?: string }) {
         className,
       )}
     >
-      <p className="ops-label">Legend</p>
-      <ul className="mt-2 space-y-1.5">
-        {items.map((item) => (
-          <li key={item.label} className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className={cn("h-2.5 w-2.5 shrink-0 rounded-full", item.color)} />
-            <span className="truncate">{item.label}</span>
-          </li>
-        ))}
+      <div className="flex items-baseline justify-between gap-2">
+        <p className="ops-label">Legend</p>
+        {interactive && hidden.length > 0 && (
+          <button
+            type="button"
+            className="text-[0.65rem] uppercase tracking-wide text-primary hover:underline"
+            onClick={() => ALL_LEGEND_KEYS.filter((key) => hidden.includes(key)).forEach(onToggle!)}
+          >
+            Reset
+          </button>
+        )}
+      </div>
+      <ul className="mt-2 space-y-1">
+        {LEGEND_ITEMS.map((item) => {
+          const off = hidden.includes(item.key);
+          const content = (
+            <>
+              <span
+                className={cn("h-2.5 w-2.5 shrink-0 rounded-full", item.color, off && "opacity-30")}
+              />
+              <span className={cn("truncate", off && "line-through opacity-50")}>{item.label}</span>
+            </>
+          );
+          return (
+            <li key={item.key}>
+              {interactive ? (
+                <button
+                  type="button"
+                  aria-pressed={!off}
+                  onClick={() => onToggle?.(item.key)}
+                  className="flex w-full items-center gap-2 rounded-md px-1 py-0.5 text-left text-xs text-muted-foreground transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                >
+                  {content}
+                </button>
+              ) : (
+                <span className="flex items-center gap-2 px-1 py-0.5 text-xs text-muted-foreground">
+                  {content}
+                </span>
+              )}
+            </li>
+          );
+        })}
       </ul>
+      {interactive && (
+        <p className="mt-2 text-[0.65rem] text-muted-foreground/80">Click an item to filter</p>
+      )}
     </div>
   );
 }
@@ -223,9 +346,21 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-function MapPopup({ selection, onClose }: { selection: MapSelection; onClose: () => void }) {
+function MapPopup({
+  selection,
+  onClose,
+  onDirections,
+  routing,
+  error,
+}: {
+  selection: MapSelection;
+  onClose: () => void;
+  onDirections: () => void;
+  routing: boolean;
+  error: string | null;
+}) {
   return (
-    <Card className="absolute right-3 top-3 z-10 w-[min(20rem,calc(100%-1.5rem))] border-border/70 bg-background/95 p-4 shadow-panel backdrop-blur">
+    <Card className="absolute right-3 top-3 z-10 w-[min(20rem,calc(100%-1.5rem))] animate-in fade-in slide-in-from-top-2 border-border/70 bg-background/95 p-4 shadow-panel backdrop-blur duration-200">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
         <div className="min-w-0">
           <p className="ops-label">
@@ -238,14 +373,16 @@ function MapPopup({ selection, onClose }: { selection: MapSelection; onClose: ()
                   : "Blocked road"}
           </p>
           <h3 className="truncate text-base font-semibold">
-            {selection.kind === "disaster"
-              ? selection.data.locationName
-              : selection.kind === "road"
-                ? selection.data.name
-                : selection.data.name}
+            {selection.kind === "disaster" ? selection.data.locationName : selection.data.name}
           </h3>
         </div>
-        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={onClose} aria-label="Close details">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 shrink-0"
+          onClick={onClose}
+          aria-label="Close details"
+        >
           <X className="h-4 w-4" />
         </Button>
       </div>
@@ -294,10 +431,14 @@ function MapPopup({ selection, onClose }: { selection: MapSelection; onClose: ()
         )}
       </div>
 
-      <Button size="sm" className="mt-3 w-full">
-        {selection.kind === "disaster" ? (
+      <Button size="sm" className="mt-3 w-full" onClick={onDirections} disabled={routing}>
+        {routing ? (
           <>
-            <Maximize2 className="h-4 w-4" /> View safety guidance
+            <Loader2 className="h-4 w-4 animate-spin" /> Calculating route…
+          </>
+        ) : selection.kind === "disaster" ? (
+          <>
+            <Maximize2 className="h-4 w-4" /> Route to this zone
           </>
         ) : (
           <>
@@ -305,9 +446,13 @@ function MapPopup({ selection, onClose }: { selection: MapSelection; onClose: ()
           </>
         )}
       </Button>
-      <p className="mt-2 text-center text-[0.7rem] text-muted-foreground">
-        Demo action — no external routing service connected.
-      </p>
+      {error ? (
+        <p className="mt-2 text-center text-[0.7rem] text-critical">{error}</p>
+      ) : (
+        <p className="mt-2 text-center text-[0.7rem] text-muted-foreground">
+          Driving route from your tracked location (city centre if location is off).
+        </p>
+      )}
     </Card>
   );
 }
