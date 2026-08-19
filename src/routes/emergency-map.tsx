@@ -160,8 +160,6 @@ function EmergencyMapPage() {
               ))}
             </div>
           </Card>
-
-          <MapLegend className="hidden lg:block" />
         </aside>
 
         <div className="min-w-0 space-y-3">
@@ -171,7 +169,6 @@ function EmergencyMapPage() {
             hospitals={facilities.hospitals ? demoHospitals : []}
             roads={facilities.roads ? demoBlockedRoads : []}
             className="h-[32rem] lg:h-[calc(100vh-13rem)]"
-            showLegend={false}
           />
           {filteredReports.length === 0 && (
             <EmptyState
