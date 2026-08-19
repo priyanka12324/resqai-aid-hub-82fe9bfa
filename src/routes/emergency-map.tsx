@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { EmergencyMap, MapLegend } from "@/components/resq/emergency-map";
+import { EmergencyMap } from "@/components/resq/emergency-map";
 import { EmptyState } from "@/components/resq/states";
 import {
   demoBlockedRoads,
