@@ -14,16 +14,258 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      facilities: {
+        Row: {
+          amenities: string[]
+          beds_available: number
+          capacity: number
+          code: string
+          contact: string | null
+          created_at: string
+          icu_available: number
+          id: string
+          kind: Database["public"]["Enums"]["facility_kind"]
+          lat: number
+          lng: number
+          location_name: string
+          name: string
+          occupied: number
+          status: string
+          triage_load: string
+          updated_at: string
+        }
+        Insert: {
+          amenities?: string[]
+          beds_available?: number
+          capacity?: number
+          code: string
+          contact?: string | null
+          created_at?: string
+          icu_available?: number
+          id?: string
+          kind: Database["public"]["Enums"]["facility_kind"]
+          lat: number
+          lng: number
+          location_name: string
+          name: string
+          occupied?: number
+          status?: string
+          triage_load?: string
+          updated_at?: string
+        }
+        Update: {
+          amenities?: string[]
+          beds_available?: number
+          capacity?: number
+          code?: string
+          contact?: string | null
+          created_at?: string
+          icu_available?: number
+          id?: string
+          kind?: Database["public"]["Enums"]["facility_kind"]
+          lat?: number
+          lng?: number
+          location_name?: string
+          name?: string
+          occupied?: number
+          status?: string
+          triage_load?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          ai_actions: string[]
+          ai_affected_area: string | null
+          ai_confidence: number
+          ai_hazards: string[]
+          ai_priority_score: number
+          ai_recommended_action: string | null
+          ai_risk_level: string | null
+          ai_simulated: boolean
+          ai_summary: string | null
+          code: string
+          created_at: string
+          description: string
+          district: string
+          id: string
+          image_url: string | null
+          immediate_danger: string
+          lat: number
+          lng: number
+          location_name: string
+          people_affected: number
+          severity: Database["public"]["Enums"]["severity_level"]
+          status: Database["public"]["Enums"]["report_status"]
+          title: string
+          type: Database["public"]["Enums"]["disaster_type"]
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          ai_actions?: string[]
+          ai_affected_area?: string | null
+          ai_confidence?: number
+          ai_hazards?: string[]
+          ai_priority_score?: number
+          ai_recommended_action?: string | null
+          ai_risk_level?: string | null
+          ai_simulated?: boolean
+          ai_summary?: string | null
+          code?: string
+          created_at?: string
+          description: string
+          district?: string
+          id?: string
+          image_url?: string | null
+          immediate_danger?: string
+          lat: number
+          lng: number
+          location_name: string
+          people_affected?: number
+          severity?: Database["public"]["Enums"]["severity_level"]
+          status?: Database["public"]["Enums"]["report_status"]
+          title: string
+          type: Database["public"]["Enums"]["disaster_type"]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          ai_actions?: string[]
+          ai_affected_area?: string | null
+          ai_confidence?: number
+          ai_hazards?: string[]
+          ai_priority_score?: number
+          ai_recommended_action?: string | null
+          ai_risk_level?: string | null
+          ai_simulated?: boolean
+          ai_summary?: string | null
+          code?: string
+          created_at?: string
+          description?: string
+          district?: string
+          id?: string
+          image_url?: string | null
+          immediate_danger?: string
+          lat?: number
+          lng?: number
+          location_name?: string
+          people_affected?: number
+          severity?: Database["public"]["Enums"]["severity_level"]
+          status?: Database["public"]["Enums"]["report_status"]
+          title?: string
+          type?: Database["public"]["Enums"]["disaster_type"]
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      sos_alerts: {
+        Row: {
+          accuracy_m: number | null
+          created_at: string
+          emergency_type: string
+          id: string
+          lat: number | null
+          lng: number | null
+          message: string | null
+          status: Database["public"]["Enums"]["sos_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accuracy_m?: number | null
+          created_at?: string
+          emergency_type: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          message?: string | null
+          status?: Database["public"]["Enums"]["sos_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accuracy_m?: number | null
+          created_at?: string
+          emergency_type?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          message?: string | null
+          status?: Database["public"]["Enums"]["sos_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_operator: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "citizen" | "responder" | "admin"
+      disaster_type: "flood" | "earthquake" | "landslide" | "fire" | "cyclone"
+      facility_kind: "shelter" | "relief-camp" | "hospital"
+      report_status: "new" | "verified" | "dispatched" | "resolved"
+      severity_level: "critical" | "high" | "moderate" | "low"
+      sos_status: "pending" | "acknowledged" | "dispatched" | "resolved"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +392,13 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["citizen", "responder", "admin"],
+      disaster_type: ["flood", "earthquake", "landslide", "fire", "cyclone"],
+      facility_kind: ["shelter", "relief-camp", "hospital"],
+      report_status: ["new", "verified", "dispatched", "resolved"],
+      severity_level: ["critical", "high", "moderate", "low"],
+      sos_status: ["pending", "acknowledged", "dispatched", "resolved"],
+    },
   },
 } as const
