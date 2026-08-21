@@ -67,6 +67,7 @@ Replace mock triage and assistant with Lovable AI Gateway calls in existing serv
 README/architecture + security doc, pitch deck, Remotion demo video, publish to public URL.
 
 ## Technical notes
+
 - All backend access goes through `createServerFn` (no edge functions); admin/service-role imports stay inside handlers.
 - Protected fetches rely on the already-registered bearer middleware in `src/start.ts`.
 - No `.env` file, no keys in client code; server keys read inside handlers only.

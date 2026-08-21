@@ -21,19 +21,13 @@ import {
   type Hospital,
   type Shelter,
 } from "@/data/demo";
-import {
-  CITY_CENTER,
-  formatDistance,
-  formatDuration,
-  pointToLatLng,
-  type LatLng,
-} from "@/lib/geo";
+import { CITY_CENTER, formatDistance, formatDuration, pointToLatLng, type LatLng } from "@/lib/geo";
 import { computeRoute, type RouteResult } from "@/lib/directions.functions";
 import { cn } from "@/lib/utils";
 
 export type { MapSelection } from "@/components/resq/map-selection";
 
-const GoogleMapCanvas = lazy(() => import("@/components/resq/google-map-canvas"));
+const LeafletMapCanvas = lazy(() => import("@/components/resq/leaflet-map-canvas"));
 
 export interface MapLayers {
   disasters: boolean;
@@ -84,7 +78,9 @@ export function EmergencyMap({
   const isVisible = useCallback((key: LegendKey) => !hidden.includes(key), [hidden]);
 
   const toggleLegend = (key: LegendKey) =>
-    setHidden((prev) => (prev.includes(key) ? prev.filter((item) => item !== key) : [...prev, key]));
+    setHidden((prev) =>
+      prev.includes(key) ? prev.filter((item) => item !== key) : [...prev, key],
+    );
 
   const visibleReports = useMemo(
     () => (layers.disasters ? reports.filter((report) => isVisible(report.severity)) : []),
@@ -192,7 +188,7 @@ export function EmergencyMap({
             </div>
           }
         >
-          <GoogleMapCanvas
+          <LeafletMapCanvas
             reports={visibleReports}
             shelters={visibleShelters}
             hospitals={visibleHospitals}

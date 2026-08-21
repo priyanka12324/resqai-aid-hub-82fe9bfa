@@ -19,80 +19,54 @@ export interface RouteResult {
 }
 
 /**
- * Computes a single route between two points via the Google Routes API
- * (through the Lovable connector gateway). Called only on an explicit
- * "Get directions" click — never polled or fanned out.
+ * Computes a route between two points using the OpenStreetMap OSRM routing service.
+ * Free, open-source, and does not require proprietary Google API keys.
  */
 export const computeRoute = createServerFn({ method: "POST" })
   .inputValidator((data) => inputSchema.parse(data))
   .handler(async ({ data }): Promise<RouteResult> => {
-    const lovableApiKey = process.env["LOVABLE_API_KEY"];
-    const connectionKey = process.env["GOOGLE_MAPS_API_KEY"];
-    if (!lovableApiKey || !connectionKey) {
-      throw new Error("Google Maps connector is not configured.");
-    }
+    const { origin, destination } = data;
 
-    const response = await fetch(
-      "https://connector-gateway.lovable.dev/google_maps/routes/directions/v2:computeRoutes",
-      {
-        method: "POST",
+    try {
+      const url = `https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${destination.lng},${destination.lat}?overview=simplified`;
+      const response = await fetch(url, {
         headers: {
-          Authorization: `Bearer ${lovableApiKey}`,
-          "X-Connection-Api-Key": connectionKey,
-          "Content-Type": "application/json",
-          "X-Goog-FieldMask":
-            "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline",
+          "User-Agent": "ResQAI-Disaster-Response-App/1.0",
         },
-        body: JSON.stringify({
-          origin: { location: { latLng: { latitude: data.origin.lat, longitude: data.origin.lng } } },
-          destination: {
-            location: { latLng: { latitude: data.destination.lat, longitude: data.destination.lng } },
-          },
-          travelMode: data.mode,
-          ...(data.mode === "DRIVE" ? { routingPreference: "TRAFFIC_AWARE" } : {}),
-        }),
-      },
-    );
+      });
 
-    if (response.status === 403) {
-      const details: Array<{ reason?: string }> =
-        (await response.json().catch(() => null))?.error?.details ?? [];
-      const reason = details.find((d) => d.reason)?.reason;
-      if (reason === "API_KEY_HTTP_REFERRER_BLOCKED") {
-        throw new Error(
-          'Google Maps server key is referrer-restricted. In Google Cloud Console, set the server key\'s application restrictions to "None" or "IP addresses".',
-        );
+      if (response.ok) {
+        const json = await response.json();
+        const route = json.routes?.[0];
+        if (route) {
+          return {
+            distanceMeters: Math.round(route.distance),
+            durationSeconds: Math.round(route.duration),
+            encodedPolyline: route.geometry,
+          };
+        }
       }
-      if (reason === "API_KEY_SERVICE_BLOCKED") {
-        throw new Error(
-          "Google Maps server key does not allow the Routes API. Add it to the server key's allowed-APIs list in Google Cloud Console.",
-        );
-      }
-      throw new Error("Google Maps request was denied (403). Check the server key restrictions.");
+    } catch (err) {
+      console.warn("OSRM routing service failed, computing direct distance:", err);
     }
 
-    if (!response.ok) {
-      const body = await response.text();
-      console.error(`Routes API failed [${response.status}]: ${body}`);
-      throw new Error(`Routing failed [${response.status}]: ${body}`);
-    }
+    // Fallback direct distance calculation
+    const R = 6371e3; // metres
+    const φ1 = (origin.lat * Math.PI) / 180;
+    const φ2 = (destination.lat * Math.PI) / 180;
+    const Δφ = ((destination.lat - origin.lat) * Math.PI) / 180;
+    const Δλ = ((destination.lng - origin.lng) * Math.PI) / 180;
 
-    const json = (await response.json()) as {
-      routes?: Array<{
-        distanceMeters?: number;
-        duration?: string;
-        polyline?: { encodedPolyline?: string };
-      }>;
-    };
-
-    const route = json.routes?.[0];
-    if (!route?.polyline?.encodedPolyline) {
-      throw new Error("No route found between these points.");
-    }
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distanceMeters = Math.round(R * c);
+    const durationSeconds = Math.round((distanceMeters / 1000 / 35) * 3600); // approx 35 km/h driving speed
 
     return {
-      distanceMeters: route.distanceMeters ?? 0,
-      durationSeconds: Number.parseInt(route.duration ?? "0", 10) || 0,
-      encodedPolyline: route.polyline.encodedPolyline,
+      distanceMeters,
+      durationSeconds,
+      encodedPolyline: "",
     };
   });

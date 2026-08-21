@@ -1,4 +1,11 @@
-import { AlertTriangle, CheckCircle2, Gauge, MapPinned, ShieldQuestion, Sparkles } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Gauge,
+  MapPinned,
+  ShieldQuestion,
+  Sparkles,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -16,7 +23,8 @@ export function AiAnalysisCard({ analysis }: { analysis: AnalysisResult }) {
             <Sparkles className="h-3.5 w-3.5" aria-hidden /> AI analysis
           </p>
           <h3 className="mt-1 text-lg font-semibold">
-            {DISASTER_LABEL[analysis.disasterType as DisasterType] ?? analysis.disasterType} assessment
+            {DISASTER_LABEL[analysis.disasterType as DisasterType] ?? analysis.disasterType}{" "}
+            assessment
           </h3>
         </div>
         <SeverityBadge severity={severityToToken(analysis.severity)} />

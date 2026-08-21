@@ -253,9 +253,11 @@ export default function GoogleMapCanvas({
     markersRef.current.forEach((marker) => marker.setAnimation(null));
     if (!selection) return;
     const title = markersRef.current.find((marker) =>
-      marker.getTitle()?.includes(
-        selection.kind === "disaster" ? selection.data.locationName : selection.data.name,
-      ),
+      marker
+        .getTitle()
+        ?.includes(
+          selection.kind === "disaster" ? selection.data.locationName : selection.data.name,
+        ),
     );
     title?.setAnimation(google.maps.Animation.BOUNCE);
     const timer = window.setTimeout(() => title?.setAnimation(null), 1400);

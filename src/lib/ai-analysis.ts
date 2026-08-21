@@ -42,15 +42,19 @@ export const SEVERITY_RULES: Record<SeverityLevel, string> = {
   LOW: "Minor incident or informational report.",
 };
 
-export const AI_DISCLAIMER =
-  "AI-assisted analysis — verify with authorized emergency authorities.";
+export const AI_DISCLAIMER = "AI-assisted analysis — verify with authorized emergency authorities.";
 
 export function severityToToken(severity: SeverityLevel): Severity {
   return severity.toLowerCase() as Severity;
 }
 
 const hazardLibrary: Record<DisasterType, string[]> = {
-  flood: ["Fast-moving water", "Submerged roads", "Electrical hazard in water", "Contaminated water"],
+  flood: [
+    "Fast-moving water",
+    "Submerged roads",
+    "Electrical hazard in water",
+    "Contaminated water",
+  ],
   landslide: ["Unstable debris", "Blocked access road", "Further slope failure"],
   earthquake: ["Structural cracks", "Falling debris", "Aftershock risk", "Gas leak risk"],
   fire: ["Dense smoke", "Air-quality risk", "Fire spread to adjacent structures"],

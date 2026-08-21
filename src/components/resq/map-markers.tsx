@@ -62,11 +62,7 @@ export function DisasterMarker({
 }: BaseMarkerProps & { type: DisasterType; severity: Severity }) {
   const Icon = disasterIcon[type];
   return (
-    <MarkerShell
-      {...rest}
-      pulse={severity === "critical"}
-      className={severityMarker[severity]}
-    >
+    <MarkerShell {...rest} pulse={severity === "critical"} className={severityMarker[severity]}>
       <Icon className="h-4 w-4" aria-hidden />
     </MarkerShell>
   );

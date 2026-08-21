@@ -140,10 +140,7 @@ export function AiChatWindow({
   const ask = (question: string) => {
     const trimmed = question.trim().slice(0, 500);
     if (!trimmed || pending) return;
-    setMessages((prev) => [
-      ...prev,
-      { id: `u-${Date.now()}`, role: "user", text: trimmed },
-    ]);
+    setMessages((prev) => [...prev, { id: `u-${Date.now()}`, role: "user", text: trimmed }]);
     setInput("");
     setPending(true);
     window.setTimeout(() => {
@@ -156,7 +153,12 @@ export function AiChatWindow({
   };
 
   return (
-    <Card className={cn("flex h-full min-h-0 flex-col border-border/70 bg-card p-0 shadow-panel", className)}>
+    <Card
+      className={cn(
+        "flex h-full min-h-0 flex-col border-border/70 bg-card p-0 shadow-panel",
+        className,
+      )}
+    >
       <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 border-b border-border/70 px-4 py-3">
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-primary/40 bg-primary/15 text-primary">
           <Bot className="h-5 w-5" aria-hidden />

@@ -10,10 +10,7 @@ const BUCKET = "report-images";
 const MAX_BYTES = 5 * 1024 * 1024;
 const ALLOWED = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
-export async function uploadReportImage(
-  reportId: string,
-  dataUrl: string,
-): Promise<string | null> {
+export async function uploadReportImage(reportId: string, dataUrl: string): Promise<string | null> {
   const match = /^data:([a-z/+.-]+);base64,(.+)$/i.exec(dataUrl);
   if (!match) return null;
   const contentType = match[1]!.toLowerCase();

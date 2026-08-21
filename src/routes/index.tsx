@@ -28,6 +28,7 @@ import {
   formatTimeAgo,
 } from "@/data/demo";
 import { useReports } from "@/lib/report-store";
+import { useFacilities } from "@/lib/facilities-store";
 import { computeOpsStats } from "@/lib/ops-metrics";
 
 export const Route = createFileRoute("/")({
@@ -52,14 +53,21 @@ export const Route = createFileRoute("/")({
 
 function Dashboard() {
   const { reports } = useReports();
+  const { shelters, hospitals } = useFacilities();
   const stats = computeOpsStats(reports);
   const criticalReports = reports.filter(
     (report) => report.severity === "critical" || report.severity === "high",
   );
-  const nearestShelter = [...demoShelters]
-    .filter((shelter) => shelter.status !== "full" && shelter.status !== "closed")
-    .sort((a, b) => a.distanceKm - b.distanceKm)[0]!;
-  const nearestHospital = [...demoHospitals].sort((a, b) => a.distanceKm - b.distanceKm)[0]!;
+  const nearestShelter =
+    [...shelters]
+      .filter((shelter) => shelter.status !== "full" && shelter.status !== "closed")
+      .sort((a, b) => a.distanceKm - b.distanceKm)[0] ??
+    shelters[0] ??
+    demoShelters[0];
+  const nearestHospital =
+    [...hospitals].sort((a, b) => a.distanceKm - b.distanceKm)[0] ??
+    hospitals[0] ??
+    demoHospitals[0];
 
   return (
     <div className="mx-auto w-full max-w-[110rem] space-y-5 p-3 sm:p-5">
@@ -121,8 +129,8 @@ function Dashboard() {
           </header>
           <EmergencyMap
             reports={reports}
-            shelters={demoShelters}
-            hospitals={demoHospitals}
+            shelters={shelters}
+            hospitals={hospitals}
             roads={demoBlockedRoads}
             className="h-[26rem] sm:h-[32rem]"
           />
@@ -169,7 +177,10 @@ function Dashboard() {
             <h2 className="text-lg font-semibold">Emergency alerts</h2>
             <ul className="mt-3 space-y-2.5">
               {demoAlerts.map((alert) => (
-                <li key={alert.id} className="rounded-lg border border-border/60 bg-surface-2/50 p-3">
+                <li
+                  key={alert.id}
+                  className="rounded-lg border border-border/60 bg-surface-2/50 p-3"
+                >
                   <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2">
                     <p className="min-w-0 truncate text-sm font-medium">{alert.title}</p>
                     <SeverityBadge severity={alert.severity} showIcon={false} />

@@ -182,7 +182,8 @@ export const demoReports: DisasterReport[] = [
     peopleAffected: 35,
     aiConfidence: 0.77,
     aiSummary: "Contained perimeter reported; air-quality risk downwind for approximately 1km.",
-    recommendedAction: "Close windows, use a damp cloth mask, keep the east lane clear for engines.",
+    recommendedAction:
+      "Close windows, use a damp cloth mask, keep the east lane clear for engines.",
     point: { x: 18, y: 62 },
   },
   {
@@ -380,7 +381,6 @@ export const demoStats = {
   sosActive: 3,
   shelterCapacityUsed: 0.58,
 };
-
 
 export const demoIncidentTrend = [
   { hour: "00:00", reports: 4, sos: 0 },

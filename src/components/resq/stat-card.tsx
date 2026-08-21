@@ -48,7 +48,10 @@ export function StatCard({
           </p>
         </div>
         <span
-          className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-lg border", toneRing[tone])}
+          className={cn(
+            "grid h-10 w-10 shrink-0 place-items-center rounded-lg border",
+            toneRing[tone],
+          )}
         >
           <Icon className="h-5 w-5" aria-hidden />
         </span>

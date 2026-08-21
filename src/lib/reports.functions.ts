@@ -6,7 +6,16 @@ import type { AnalysisResult } from "@/lib/ai-analysis";
 import type { ReportDto } from "@/lib/reports";
 
 const submitSchema = z.object({
-  category: z.enum(["flood", "landslide", "earthquake", "fire", "cyclone", "road", "building", "other"]),
+  category: z.enum([
+    "flood",
+    "landslide",
+    "earthquake",
+    "fire",
+    "cyclone",
+    "road",
+    "building",
+    "other",
+  ]),
   disasterType: z.enum(["flood", "landslide", "earthquake", "fire", "cyclone"]),
   title: z.string().trim().min(3).max(120),
   description: z.string().trim().min(10).max(2000),
@@ -24,20 +33,22 @@ const REPORT_COLUMNS =
   "id, code, type, title, description, location_name, district, lat, lng, severity, status, people_affected, image_url, ai_summary, ai_recommended_action, ai_hazards, ai_actions, ai_priority_score, ai_confidence, ai_risk_level, ai_affected_area, ai_simulated, created_at";
 
 /** Public list of incident reports — safe columns only, read as anon. */
-export const listReports = createServerFn({ method: "GET" }).handler(async (): Promise<ReportDto[]> => {
-  const { createPublicSupabase } = await import("@/lib/supabase-public.server");
-  const supabase = createPublicSupabase();
-  const { data, error } = await supabase
-    .from("reports")
-    .select(REPORT_COLUMNS)
-    .order("created_at", { ascending: false })
-    .limit(200);
-  if (error) {
-    console.error("listReports failed", error.message);
-    return [];
-  }
-  return (data ?? []) as unknown as ReportDto[];
-});
+export const listReports = createServerFn({ method: "GET" }).handler(
+  async (): Promise<ReportDto[]> => {
+    const { createPublicSupabase } = await import("@/lib/supabase-public.server");
+    const supabase = createPublicSupabase();
+    const { data, error } = await supabase
+      .from("reports")
+      .select(REPORT_COLUMNS)
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) {
+      console.error("listReports failed", error.message);
+      return [];
+    }
+    return (data ?? []) as unknown as ReportDto[];
+  },
+);
 
 /**
  * Store a citizen report, then attach AI triage.

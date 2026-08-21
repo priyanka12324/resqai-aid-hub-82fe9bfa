@@ -57,7 +57,12 @@ export function EmergencyAlertBanner({
           {meta && <p className="mt-1 font-mono text-[0.7rem] text-muted-foreground/80">{meta}</p>}
         </div>
         {actionLabel && actionTo && (
-          <Button asChild variant="outline" size="sm" className="col-span-2 lg:col-span-1 lg:ml-auto">
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="col-span-2 lg:col-span-1 lg:ml-auto"
+          >
             <Link to={actionTo}>
               {actionLabel}
               <ArrowRight className="h-4 w-4" />

@@ -65,9 +65,11 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --shadow-panel: 0 1px 0 0 color-mix(in oklab, var(--foreground) 6%, transparent),
+  --shadow-panel:
+    0 1px 0 0 color-mix(in oklab, var(--foreground) 6%, transparent),
     0 18px 40px -24px oklch(0 0 0 / 0.65);
-  --shadow-alert: 0 0 0 1px color-mix(in oklab, var(--critical) 45%, transparent),
+  --shadow-alert:
+    0 0 0 1px color-mix(in oklab, var(--critical) 45%, transparent),
     0 12px 32px -18px color-mix(in oklab, var(--critical) 60%, transparent);
 }
 
@@ -155,8 +157,16 @@
 
 @utility grid-backdrop {
   background-image:
-    linear-gradient(to right, color-mix(in oklab, var(--color-grid) 40%, transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in oklab, var(--color-grid) 40%, transparent) 1px, transparent 1px);
+    linear-gradient(
+      to right,
+      color-mix(in oklab, var(--color-grid) 40%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--color-grid) 40%, transparent) 1px,
+      transparent 1px
+    );
   background-size: 40px 40px;
 }
 
@@ -180,4 +190,47 @@
     transform: scale(1.5);
     opacity: 0;
   }
+}
+
+/* Leaflet dark theme adaptations */
+.leaflet-container {
+  background: #15191e !important;
+  font-family: var(--font-sans);
+}
+
+.leaflet-popup-content-wrapper {
+  background: #1b2027 !important;
+  color: #f1f5f9 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 18px 40px -24px rgba(0, 0, 0, 0.8) !important;
+}
+
+.leaflet-popup-tip {
+  background: #1b2027 !important;
+}
+
+.leaflet-popup-content {
+  margin: 0.75rem 1rem !important;
+  line-height: 1.4 !important;
+}
+
+.leaflet-control-zoom a {
+  background-color: #1b2027 !important;
+  color: #f1f5f9 !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background-color: #272f3a !important;
+}
+
+.leaflet-control-attribution {
+  background: rgba(21, 25, 30, 0.85) !important;
+  color: #8b95a3 !important;
+  font-size: 10px !important;
+}
+
+.leaflet-control-attribution a {
+  color: #38bdf8 !important;
 }

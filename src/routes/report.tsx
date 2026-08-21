@@ -28,7 +28,8 @@ import { AiAnalysisCard } from "@/components/resq/ai-analysis-card";
 import { EmergencyAlertBanner } from "@/components/resq/emergency-alert-banner";
 import { LoadingPanel } from "@/components/resq/states";
 import { mockAnalyzeReport, severityToToken, type AnalysisResult } from "@/lib/ai-analysis";
-import { addReport } from "@/lib/report-store";
+import { submitDisasterReport } from "@/lib/report-store";
+import { useAuth } from "@/lib/auth-context";
 import type { DisasterType } from "@/data/demo";
 
 export const Route = createFileRoute("/report")({
@@ -43,7 +44,8 @@ export const Route = createFileRoute("/report")({
       { property: "og:title", content: "Report a Disaster — ResQAI Citizen Reporting" },
       {
         property: "og:description",
-        content: "Citizen disaster reporting with instant AI triage and recommended safety actions.",
+        content:
+          "Citizen disaster reporting with instant AI triage and recommended safety actions.",
       },
     ],
   }),
@@ -76,6 +78,7 @@ interface FieldErrors {
 }
 
 function ReportPage() {
+  const { user } = useAuth();
   const [type, setType] = useState<string>("flood");
   const [locationName, setLocationName] = useState("Rispana Riverside Colony, Dehradun");
   const [lat, setLat] = useState("30.3165");
@@ -90,12 +93,26 @@ function ReportPage() {
   const [errors, setErrors] = useState<FieldErrors>({});
 
   const useCurrentLocation = () => {
-    setLat("30.3165");
-    setLng("78.0322");
-    setLocationName("Rispana Riverside Colony, Dehradun");
-    toast.info("Demo location applied", {
-      description: "Geolocation is simulated in this prototype.",
-    });
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setLat(pos.coords.latitude.toFixed(4));
+          setLng(pos.coords.longitude.toFixed(4));
+          toast.success("Current GPS location applied");
+        },
+        () => {
+          setLat("30.3165");
+          setLng("78.0322");
+          setLocationName("Rispana Riverside Colony, Dehradun");
+          toast.info("Demo location applied");
+        },
+      );
+    } else {
+      setLat("30.3165");
+      setLng("78.0322");
+      setLocationName("Rispana Riverside Colony, Dehradun");
+      toast.info("Demo location applied");
+    }
   };
 
   const onImage = (file: File | undefined) => {
@@ -117,7 +134,8 @@ function ReportPage() {
   const validate = () => {
     const next: FieldErrors = {};
     if (locationName.trim().length < 3) next.location = "Enter a location name (min 3 characters).";
-    if (description.trim().length < 10) next.description = "Describe what is happening (min 10 characters).";
+    if (description.trim().length < 10)
+      next.description = "Describe what is happening (min 10 characters).";
     const peopleNumber = Number(people);
     if (!Number.isFinite(peopleNumber) || peopleNumber < 0 || peopleNumber > 1_000_000)
       next.people = "Enter a number between 0 and 1,000,000.";
@@ -131,45 +149,41 @@ function ReportPage() {
     return Object.keys(next).length === 0;
   };
 
-  const submit = (event: React.FormEvent) => {
+  const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!validate()) {
       toast.error("Please fix the highlighted fields");
       return;
     }
     setStatus("analyzing");
-    toast.success("Report received", { description: "Running AI triage on your report…" });
+    toast.info("Running AI triage on report…");
 
-    window.setTimeout(() => {
+    try {
       const disasterType = toDisasterType(type);
-      const result = mockAnalyzeReport({
-        disasterType,
-        description: description.trim().slice(0, 2000),
-        location: locationName.trim().slice(0, 200),
+      const res = await submitDisasterReport({
+        type: disasterType,
+        title: description.trim().slice(0, 70) || "Citizen incident report",
+        description: description.trim(),
+        locationName: locationName.trim(),
+        lat: Number(lat),
+        lng: Number(lng),
         peopleAffected: Number(people),
         immediateDanger: danger,
-        image: imageName,
+        imageUrl: imagePreview,
+        userId: user?.id ?? null,
       });
-      setAnalysis(result);
-      setStatus("done");
 
-      addReport({
-        id: `RPT-${Math.floor(1000 + Math.random() * 8999)}`,
-        type: disasterType,
-        title: description.trim().slice(0, 70) || "Citizen report",
-        description: description.trim().slice(0, 500),
-        locationName: locationName.trim().slice(0, 120),
-        district: "Citizen submitted",
-        severity: severityToToken(result.severity),
-        status: "new",
-        reportedAt: new Date().toISOString(),
-        peopleAffected: Number(people),
-        aiConfidence: Math.min(0.95, result.priorityScore / 100),
-        aiSummary: result.summary,
-        recommendedAction: result.recommendedActions[0] ?? "Follow official instructions.",
-        point: { x: 30 + Math.random() * 40, y: 30 + Math.random() * 40 },
+      setAnalysis(res.analysis);
+      setStatus("done");
+      toast.success("Incident report submitted to Supabase", {
+        description: `Severity: ${res.analysis.severity} · Code: ${res.report.id}`,
       });
-    }, 1400);
+    } catch (err: unknown) {
+      console.error("Report submission failed:", err);
+      const msg = err instanceof Error ? err.message : "Error saving report";
+      toast.error("Could not save report", { description: msg });
+      setStatus("idle");
+    }
   };
 
   return (
@@ -222,12 +236,22 @@ function ReportPage() {
               <div className="mt-3 grid grid-cols-2 gap-3">
                 <div>
                   <Label htmlFor="lat">Latitude (demo mode)</Label>
-                  <Input id="lat" value={lat} onChange={(e) => setLat(e.target.value)} className="mt-1.5" />
+                  <Input
+                    id="lat"
+                    value={lat}
+                    onChange={(e) => setLat(e.target.value)}
+                    className="mt-1.5"
+                  />
                   {errors.lat && <p className="mt-1 text-xs text-critical">{errors.lat}</p>}
                 </div>
                 <div>
                   <Label htmlFor="lng">Longitude (demo mode)</Label>
-                  <Input id="lng" value={lng} onChange={(e) => setLng(e.target.value)} className="mt-1.5" />
+                  <Input
+                    id="lng"
+                    value={lng}
+                    onChange={(e) => setLng(e.target.value)}
+                    className="mt-1.5"
+                  />
                   {errors.lng && <p className="mt-1 text-xs text-critical">{errors.lng}</p>}
                 </div>
               </div>

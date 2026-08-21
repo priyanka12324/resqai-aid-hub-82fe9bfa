@@ -8,14 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { EmergencyMap } from "@/components/resq/emergency-map";
 import { EmptyState } from "@/components/resq/states";
-import {
-  demoBlockedRoads,
-  demoHospitals,
-  demoShelters,
-  type DisasterType,
-  type Severity,
-} from "@/data/demo";
+import { demoBlockedRoads, type DisasterType, type Severity } from "@/data/demo";
 import { useReports } from "@/lib/report-store";
+import { useFacilities } from "@/lib/facilities-store";
 
 export const Route = createFileRoute("/emergency-map")({
   head: () => ({
@@ -47,6 +42,7 @@ const severityFilters: Severity[] = ["critical", "high", "moderate", "low"];
 
 function EmergencyMapPage() {
   const { reports } = useReports();
+  const { shelters: liveShelters, hospitals: liveHospitals } = useFacilities();
   const [disaster, setDisaster] = useState<DisasterType | "all">("all");
   const [severities, setSeverities] = useState<Severity[]>([...severityFilters]);
   const [facilities, setFacilities] = useState({
@@ -67,10 +63,10 @@ function EmergencyMapPage() {
 
   const filteredShelters = useMemo(
     () =>
-      demoShelters.filter((shelter) =>
+      liveShelters.filter((shelter) =>
         shelter.kind === "relief-camp" ? facilities.reliefCamps : facilities.shelters,
       ),
-    [facilities],
+    [liveShelters, facilities],
   );
 
   const toggleSeverity = (value: Severity) =>
@@ -153,7 +149,10 @@ function EmergencyMapPage() {
                     checked={severities.includes(value)}
                     onCheckedChange={() => toggleSeverity(value)}
                   />
-                  <Label htmlFor={`severity-${value}`} className="text-sm capitalize text-muted-foreground">
+                  <Label
+                    htmlFor={`severity-${value}`}
+                    className="text-sm capitalize text-muted-foreground"
+                  >
                     {value}
                   </Label>
                 </div>
@@ -166,7 +165,7 @@ function EmergencyMapPage() {
           <EmergencyMap
             reports={filteredReports}
             shelters={filteredShelters}
-            hospitals={facilities.hospitals ? demoHospitals : []}
+            hospitals={facilities.hospitals ? liveHospitals : []}
             roads={facilities.roads ? demoBlockedRoads : []}
             className="h-[32rem] lg:h-[calc(100vh-13rem)]"
           />

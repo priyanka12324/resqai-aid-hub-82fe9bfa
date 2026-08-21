@@ -20,7 +20,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { createSosAlert, SOS_TYPE_LABEL, type SosAlert, type SosType } from "@/lib/sos-store";
+import { sendSosAlert, SOS_TYPE_LABEL, type SosAlert, type SosType } from "@/lib/sos-store";
+import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
 
 const DEMO_LOCATION = "Rispana Riverside Colony, Dehradun";
@@ -33,27 +34,36 @@ export function SosButton({
   size?: "default" | "large";
   className?: string;
 }) {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [state, setState] = useState<"idle" | "sending" | "sent">("idle");
   const [type, setType] = useState<SosType>("trapped");
   const [message, setMessage] = useState("");
   const [alert, setAlert] = useState<SosAlert | null>(null);
 
-  const confirm = () => {
+  const confirm = async () => {
     setState("sending");
-    window.setTimeout(() => {
-      const created = createSosAlert({
+    try {
+      const created = await sendSosAlert({
         type,
         message: message.trim().slice(0, 300),
         location: DEMO_LOCATION,
         coords: DEMO_COORDS,
+        lat: 30.3165,
+        lng: 78.0322,
+        userId: user?.id ?? null,
       });
       setAlert(created);
       setState("sent");
-      toast.success("SOS alert created (simulated)", {
-        description: "In a live deployment this would reach the district control room.",
+      toast.success("SOS distress signal sent to Command Center", {
+        description: `Alert Reference: ${created.id}`,
       });
-    }, 1100);
+    } catch (err: unknown) {
+      console.error("SOS transmission error:", err);
+      const msg = err instanceof Error ? err.message : "Network error";
+      toast.error("Failed to transmit SOS", { description: msg });
+      setState("idle");
+    }
   };
 
   const close = () => {

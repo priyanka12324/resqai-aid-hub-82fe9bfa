@@ -1,9 +1,4 @@
-import {
-  demoHospitals,
-  demoShelters,
-  type DisasterReport,
-  type Severity,
-} from "@/data/demo";
+import { demoHospitals, demoShelters, type DisasterReport, type Severity } from "@/data/demo";
 
 /**
  * Single source of truth for the numbers shown on the dashboard and the
@@ -32,7 +27,10 @@ export const shelterSeatsFree = openShelters.reduce(
 
 export const shelterCapacityUsed =
   openShelters.reduce((total, shelter) => total + shelter.occupied, 0) /
-  Math.max(1, openShelters.reduce((total, shelter) => total + shelter.capacity, 0));
+  Math.max(
+    1,
+    openShelters.reduce((total, shelter) => total + shelter.capacity, 0),
+  );
 
 export const hospitalBedsFree = demoHospitals.reduce(
   (total, hospital) => total + hospital.bedsAvailable,

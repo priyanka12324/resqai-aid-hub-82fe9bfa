@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { ShelterCard } from "@/components/resq/shelter-card";
 import { HospitalCard } from "@/components/resq/hospital-card";
 import { EmptyState } from "@/components/resq/states";
-import { demoHospitals, demoShelters } from "@/data/demo";
+import { useFacilities } from "@/lib/facilities-store";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/find-help")({
@@ -34,11 +34,12 @@ type SortMode = "nearest" | "available";
 type Category = "all" | "shelters" | "relief-camps" | "hospitals";
 
 function FindHelpPage() {
+  const { shelters: liveShelters, hospitals: liveHospitals } = useFacilities();
   const [sort, setSort] = useState<SortMode>("nearest");
   const [category, setCategory] = useState<Category>("all");
 
   const shelters = useMemo(() => {
-    const list = demoShelters.filter((shelter) =>
+    const list = liveShelters.filter((shelter) =>
       category === "shelters"
         ? shelter.kind === "shelter"
         : category === "relief-camps"
@@ -50,25 +51,26 @@ function FindHelpPage() {
         ? a.distanceKm - b.distanceKm
         : b.capacity - b.occupied - (a.capacity - a.occupied),
     );
-  }, [category, sort]);
+  }, [liveShelters, category, sort]);
 
   const hospitals = useMemo(() => {
     if (category === "shelters" || category === "relief-camps") return [];
-    return [...demoHospitals].sort((a, b) =>
+    return [...liveHospitals].sort((a, b) =>
       sort === "nearest" ? a.distanceKm - b.distanceKm : b.bedsAvailable - a.bedsAvailable,
     );
-  }, [category, sort]);
+  }, [liveHospitals, category, sort]);
 
   const recommended = useMemo(
     () =>
-      [...demoShelters]
+      [...liveShelters]
         .filter((shelter) => shelter.status === "open")
         .sort(
           (a, b) =>
-            (b.capacity - b.occupied) / b.capacity - a.distanceKm / 10 -
+            (b.capacity - b.occupied) / b.capacity -
+            a.distanceKm / 10 -
             ((a.capacity - a.occupied) / a.capacity - b.distanceKm / 10),
         )[0],
-    [],
+    [liveShelters],
   );
 
   const directions = (name: string) =>
@@ -76,8 +78,18 @@ function FindHelpPage() {
       description: "Demo only — no external routing service is connected.",
     });
 
-  const filters: { key: Category | SortMode; label: string; active: boolean; onClick: () => void }[] = [
-    { key: "nearest", label: "Nearest", active: sort === "nearest", onClick: () => setSort("nearest") },
+  const filters: {
+    key: Category | SortMode;
+    label: string;
+    active: boolean;
+    onClick: () => void;
+  }[] = [
+    {
+      key: "nearest",
+      label: "Nearest",
+      active: sort === "nearest",
+      onClick: () => setSort("nearest"),
+    },
     {
       key: "available",
       label: "Most available",

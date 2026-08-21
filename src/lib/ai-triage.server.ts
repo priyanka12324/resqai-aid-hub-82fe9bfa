@@ -39,7 +39,10 @@ function coerce(raw: unknown, input: AnalysisInput): AnalysisResult | null {
   const list = (key: string, fallback: string[]) => {
     const arr = value[key];
     if (!Array.isArray(arr)) return fallback;
-    const clean = arr.map((item) => String(item).slice(0, 160)).filter(Boolean).slice(0, 6);
+    const clean = arr
+      .map((item) => String(item).slice(0, 160))
+      .filter(Boolean)
+      .slice(0, 6);
     return clean.length ? clean : fallback;
   };
   const summary = String(value["summary"] ?? "").slice(0, 600);

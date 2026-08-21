@@ -8,13 +8,7 @@ export type MapSelection =
 
 /** Clickable legend / layer keys. */
 export type LegendKey =
-  | "critical"
-  | "high"
-  | "moderate"
-  | "low"
-  | "shelters"
-  | "hospitals"
-  | "roads";
+  "critical" | "high" | "moderate" | "low" | "shelters" | "hospitals" | "roads";
 
 export const ALL_LEGEND_KEYS: LegendKey[] = [
   "critical",

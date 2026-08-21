@@ -6,8 +6,7 @@ export const GOOGLE_MAPS_BROWSER_KEY = import.meta.env[
 ] as string | undefined;
 
 const TRACKING_ID = import.meta.env["VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_TRACKING_ID"] as
-  | string
-  | undefined;
+  string | undefined;
 
 export function loadGoogleMaps(): Promise<typeof google.maps> {
   if (typeof window === "undefined") {

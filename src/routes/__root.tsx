@@ -16,6 +16,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import { AppSidebar } from "@/components/resq/app-sidebar";
 import { AppHeader } from "@/components/resq/app-header";
+import { AuthProvider } from "@/lib/auth-context";
 
 function NotFoundComponent() {
   return (
@@ -93,6 +94,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "stylesheet", href: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -137,21 +139,23 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <SidebarProvider>
-        <div className="flex min-h-screen w-full bg-background">
-          <AppSidebar />
-          <div className="flex min-w-0 flex-1 flex-col">
-            <AppHeader />
-            <main className="min-w-0 flex-1">
-              {/* Required: nested routes render here. */}
-              <PageTransition>
-                <Outlet />
-              </PageTransition>
-            </main>
+      <AuthProvider>
+        <SidebarProvider>
+          <div className="flex min-h-screen w-full bg-background">
+            <AppSidebar />
+            <div className="flex min-w-0 flex-1 flex-col">
+              <AppHeader />
+              <main className="min-w-0 flex-1">
+                {/* Required: nested routes render here. */}
+                <PageTransition>
+                  <Outlet />
+                </PageTransition>
+              </main>
+            </div>
           </div>
-        </div>
-      </SidebarProvider>
-      <Toaster />
+        </SidebarProvider>
+        <Toaster />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

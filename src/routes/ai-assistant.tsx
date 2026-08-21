@@ -15,7 +15,8 @@ export const Route = createFileRoute("/ai-assistant")({
       { property: "og:title", content: "Emergency AI Assistant — ResQAI Safety Guidance" },
       {
         property: "og:description",
-        content: "Concise AI safety guidance for floods, landslides, earthquakes and blocked roads.",
+        content:
+          "Concise AI safety guidance for floods, landslides, earthquakes and blocked roads.",
       },
     ],
   }),
@@ -39,7 +40,9 @@ function AiAssistantPage() {
           <h2 className="text-base font-semibold">How to use it</h2>
           <ul className="mt-2 space-y-2 text-sm text-muted-foreground">
             <li>Describe your situation in a sentence — the assistant leads with safety steps.</li>
-            <li>Use quick actions for flood, landslide, earthquake, shelter and hospital guidance.</li>
+            <li>
+              Use quick actions for flood, landslide, earthquake, shelter and hospital guidance.
+            </li>
             <li>Routes and distances come from demo data and are never guaranteed safe.</li>
             <li>Always follow official instructions from local emergency authorities.</li>
           </ul>

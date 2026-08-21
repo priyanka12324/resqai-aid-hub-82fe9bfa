@@ -21,7 +21,13 @@ const statusLabel: Record<Shelter["status"], string> = {
   closed: "Closed",
 };
 
-export function ShelterCard({ shelter, onNavigate }: { shelter: Shelter; onNavigate?: () => void }) {
+export function ShelterCard({
+  shelter,
+  onNavigate,
+}: {
+  shelter: Shelter;
+  onNavigate?: () => void;
+}) {
   const available = Math.max(0, shelter.capacity - shelter.occupied);
   const usage = Math.round((shelter.occupied / shelter.capacity) * 100);
 
@@ -112,7 +118,9 @@ export function NearestHelpRow({
       <span
         className={cn(
           "grid h-9 w-9 shrink-0 place-items-center rounded-lg border",
-          tone === "safe" ? "border-safe/30 bg-safe/12 text-safe" : "border-accent/30 bg-accent/12 text-accent",
+          tone === "safe"
+            ? "border-safe/30 bg-safe/12 text-safe"
+            : "border-accent/30 bg-accent/12 text-accent",
         )}
       >
         <Icon className="h-4.5 w-4.5" aria-hidden />
