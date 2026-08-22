@@ -12,7 +12,7 @@ The platform connects citizens and disaster-response administrators through a ce
 ## links 
 🚀 Live Demo:  https://resqai-aid-hub-82fe9bfa.vercel.app/
 💻 GitHub:  https://github.com/priyanka12324/resqai-aid-hub-82fe9bfa
-📊 Presentation: 
+📊 Presentation: https://docs.google.com/presentation/d/1KwRv0OV7fNpJ5WsE-1ePpn28u-_wR9-j/edit?usp=drive_link&ouid=117767666886122076028&rtpof=true&sd=true
 🎥 Demo Video:  https://drive.google.com/file/d/1k5Z3A0LMLzZcjqDJT4JRtP2cZpjxQlDz/view?usp=sharing
 
 ---
@@ -499,5 +499,5 @@ Add your final demo video link here
 ## links 
 🚀 Live Demo:  https://resqai-aid-hub-82fe9bfa.vercel.app/
 💻 GitHub:  https://github.com/priyanka12324/resqai-aid-hub-82fe9bfa
-📊 Presentation: 
+📊 Presentation: https://docs.google.com/presentation/d/1KwRv0OV7fNpJ5WsE-1ePpn28u-_wR9-j/edit?usp=drive_link&ouid=117767666886122076028&rtpof=true&sd=true
 🎥 Demo Video:  https://drive.google.com/file/d/1k5Z3A0LMLzZcjqDJT4JRtP2cZpjxQlDz/view?usp=sharing
