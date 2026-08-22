@@ -143,3 +143,8 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+## links 
+🚀 Live Demo:  https://resqai-aid-hub-82fe9bfa.vercel.app/
+💻 GitHub:  https://github.com/priyanka12324/resqai-aid-hub-82fe9bfa
+📊 Presentation: 
+🎥 Demo Video:  https://drive.google.com/file/d/1k5Z3A0LMLzZcjqDJT4JRtP2cZpjxQlDz/view?usp=sharing
